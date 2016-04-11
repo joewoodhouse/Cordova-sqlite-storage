@@ -14,7 +14,9 @@
 // https://issues.apache.org/jira/browse/CB-9638
 // Solution is to use NSJSONSerialization instead.
 #ifdef READ_BLOB_AS_BASE64
+#ifndef __CORDOVA_4_0_0
 #import <Cordova/NSData+Base64.h>
+#endif
 #endif
 
 
@@ -554,16 +556,21 @@
 +(NSString*)getBlobAsBase64String:(const char*)blob_chars
                        withLength:(int)blob_length
 {
+    #ifndef __CORDOVA_4_0_0
     size_t outputLength = 0;
     char* outputBuffer = CDVNewBase64Encode(blob_chars, blob_length, true, &outputLength);
-
     NSString* result = [[NSString alloc] initWithBytesNoCopy:outputBuffer
                                                       length:outputLength
                                                     encoding:NSASCIIStringEncoding
                                                 freeWhenDone:YES];
-#if !__has_feature(objc_arc)
+    #else
+    NSData* data = [NSData dataWithBytes:blob_chars length:blob_length];
+    NSString* result = [data base64EncodedStringWithOptions:0 ];
+    #endif
+
+    #if !__has_feature(objc_arc)
     [result autorelease];
-#endif
+    #endif
 
     return result;
 }
